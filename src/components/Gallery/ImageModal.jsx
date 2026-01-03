@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { tx, id } from '@instantdb/react';
 import { db } from '../../db/instant';
 
-const ImageModal = ({ image, currentUser, onClose, onLike, onComment }) => {
+const ImageModal = ({ image, currentUser, onClose, onLike, onComment, onRequestIdentity }) => {
     const [inputValue, setInputValue] = useState('');
     const scrollRef = useRef(null);
+    const inputRef = useRef(null);
+    const [shouldFocusOnAuth, setShouldFocusOnAuth] = useState(false);
 
     // Sync comments from InstantDB
     const { isLoading, error, data } = db.useQuery({
@@ -27,6 +29,14 @@ const ImageModal = ({ image, currentUser, onClose, onLike, onComment }) => {
         }
     }, [sortedComments.length]);
 
+    // Auto-focus input after user completes identity flow
+    useEffect(() => {
+        if (currentUser && shouldFocusOnAuth && inputRef.current) {
+            inputRef.current.focus();
+            setShouldFocusOnAuth(false);
+        }
+    }, [currentUser, shouldFocusOnAuth]);
+
     if (!image) return null;
 
     const themeColor = image.color || '#000000';
@@ -35,8 +45,15 @@ const ImageModal = ({ image, currentUser, onClose, onLike, onComment }) => {
 
     const handleCommentSubmit = (e) => {
         e.preventDefault();
+
+        if (!currentUser) {
+            onRequestIdentity?.();
+            setShouldFocusOnAuth(true);
+            return;
+        }
+
         const text = inputValue.trim();
-        if (!text || !image || !currentUser) return;
+        if (!text || !image) return;
 
         // Persist to InstantDB
         db.transact(
@@ -56,6 +73,15 @@ const ImageModal = ({ image, currentUser, onClose, onLike, onComment }) => {
         if (onComment) onComment(image, text);
 
         setInputValue('');
+    };
+
+    const handleInputFocus = () => {
+        if (!currentUser) {
+            onRequestIdentity?.();
+            setShouldFocusOnAuth(true);
+            // Blur immediately to prevent typing while modal is opening
+            inputRef.current?.blur();
+        }
     };
 
     // Close on Escape key
@@ -172,14 +198,15 @@ const ImageModal = ({ image, currentUser, onClose, onLike, onComment }) => {
                     <div className="p-6 border-t border-slate-50">
                         <form onSubmit={handleCommentSubmit} className="relative group">
                             <input
+                                ref={inputRef}
                                 type="text"
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
+                                onFocus={handleInputFocus}
                                 placeholder="Write something meaningful..."
-                                className="w-full pl-6 pr-16 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:outline-none focus:bg-white transition-all text-sm font-bold text-slate-900 placeholder:text-slate-300"
+                                className="w-full pl-6 pr-16 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:outline-none focus:border-indigo-500 focus:bg-white transition-all text-sm font-bold text-slate-900 placeholder:text-slate-300"
                                 style={{
                                     borderColor: inputValue.trim() ? borderThemeColor : 'transparent',
-                                    '--tw-ring-color': themeColor
                                 }}
                             />
                             <button

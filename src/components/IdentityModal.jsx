@@ -1,8 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const IdentityModal = ({ onComplete }) => {
+const IdentityModal = ({ onComplete, onClose }) => {
     const [name, setName] = useState('');
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' && onClose) {
+                onClose();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -27,8 +37,21 @@ const IdentityModal = ({ onComplete }) => {
             <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="bg-white rounded-[2rem] p-10 max-w-md w-full shadow-2xl border border-white/50"
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="relative bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl border border-white/50"
             >
+                {/* Close Button */}
+                <button
+                    onClick={onClose}
+                    className="absolute top-6 right-6 p-2 text-slate-300 hover:text-slate-500 hover:bg-slate-100 rounded-full transition-all duration-300 hover:scale-110"
+                    aria-label="Close modal"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
                 <div className="flex flex-col items-center text-center">
                     <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl flex items-center justify-center shadow-xl shadow-indigo-200 mb-8 transform -rotate-6 hover:rotate-0 transition-transform duration-500">
                         <span className="text-3xl font-black text-white italic">S</span>

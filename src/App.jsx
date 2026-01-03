@@ -129,7 +129,11 @@ function App() {
 
       <AnimatePresence>
         {isIdentityModalOpen && (
-          <IdentityModal key="modal" onComplete={handleIdentityComplete} />
+          <IdentityModal
+            key="modal"
+            onComplete={handleIdentityComplete}
+            onClose={() => setIsIdentityModalOpen(false)}
+          />
         )}
       </AnimatePresence>
 
@@ -152,6 +156,7 @@ function App() {
             onClose={() => setSelectedImage(null)}
             onLike={handleReaction}
             onComment={handleComment}
+            onRequestIdentity={() => setIsIdentityModalOpen(true)}
           />
         )}
       </div>
