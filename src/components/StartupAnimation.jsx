@@ -2,75 +2,117 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 const StartupAnimation = ({ onComplete }) => {
+    const [step, setStep] = useState(0);
     const [isFinished, setIsFinished] = useState(false);
+    const [isFirstVisit, setIsFirstVisit] = useState(true);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            setIsFinished(true);
-            setTimeout(onComplete, 500); // Allow fade-out animation
-        }, 2500); // Slightly longer for premium feel
-        return () => clearTimeout(timer);
+        const hasDoneOnboarding = localStorage.getItem('shotly_onboarding_done');
+        if (hasDoneOnboarding) {
+            setIsFirstVisit(false);
+            // Repeat visitors just see a quick splash
+            const timer = setTimeout(() => {
+                setIsFinished(true);
+                setTimeout(onComplete, 500);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else {
+            // New visitors see the sequence
+            const timers = [
+                setTimeout(() => setStep(1), 800),  // Welcome
+                setTimeout(() => setStep(2), 1600), // Subtext
+                setTimeout(() => setStep(3), 2400), // CTA
+            ];
+            return () => timers.forEach(clearTimeout);
+        }
     }, [onComplete]);
+
+    const handleEnter = () => {
+        localStorage.setItem('shotly_onboarding_done', 'true');
+        setIsFinished(true);
+        setTimeout(onComplete, 500);
+    };
 
     return (
         <AnimatePresence>
             {!isFinished && (
                 <motion.div
                     initial={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
+                    exit={{ opacity: 0, scale: 1.05, filter: "blur(20px)" }}
                     transition={{ duration: 0.8, ease: "easeInOut" }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-[conic-gradient(at_top_left,_var(--tw-gradient-stops))] from-indigo-100 via-purple-100 to-rose-100"
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-white"
                 >
-                    {/* Animated Background Glow */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.4 }}
-                        transition={{ duration: 2 }}
-                        className="absolute inset-0 bg-white/30 backdrop-blur-3xl"
-                    />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(100,100,255,0.05),transparent)] pointer-events-none" />
 
                     <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{
-                            duration: 1.2,
-                            ease: [0.16, 1, 0.3, 1],
-                        }}
-                        className="flex flex-col items-center gap-8 relative z-10"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-col items-center max-w-sm w-full px-6"
                     >
-                        {/* Logo Box */}
-                        <div className="w-24 h-24 rounded-[2rem] bg-slate-900 text-white flex items-center justify-center text-5xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative group">
-                            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent rounded-[2rem]"></div>
-                            <motion.span
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2, duration: 0.8 }}
-                                className="relative"
-                            >
-                                A
-                            </motion.span>
-
-                            {/* Outer Glow */}
-                            <div className="absolute -inset-4 bg-indigo-500/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-                        </div>
-
+                        {/* 1. Logo */}
                         <motion.div
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.6, duration: 0.8 }}
-                            className="text-center"
+                            initial={{ scale: 0.8 }}
+                            animate={{ scale: 1 }}
+                            className="w-24 h-24 bg-slate-900 rounded-[2rem] flex items-center justify-center shadow-2xl mb-12"
                         >
-                            <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-3 bg-clip-text text-transparent bg-gradient-to-b from-slate-900 to-slate-700">
-                                Antigravity
-                            </h1>
-                            <div className="flex items-center gap-3">
-                                <div className="h-[1px] w-8 bg-slate-300"></div>
-                                <p className="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase opacity-80">
-                                    Discover • React • Share
-                                </p>
-                                <div className="h-[1px] w-8 bg-slate-300"></div>
-                            </div>
+                            <span className="text-4xl font-black text-white italic">S</span>
                         </motion.div>
+
+                        {isFirstVisit ? (
+                            <div className="text-center space-y-4">
+                                {/* 2. Welcome */}
+                                <AnimatePresence>
+                                    {step >= 1 && (
+                                        <motion.h1
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="text-4xl font-black text-slate-900 tracking-tight"
+                                        >
+                                            Welcome to Shotly
+                                        </motion.h1>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* 3. Subtext */}
+                                <AnimatePresence>
+                                    {step >= 2 && (
+                                        <motion.p
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 0.5 }}
+                                            className="text-slate-500 font-medium text-lg leading-relaxed"
+                                        >
+                                            React. Comment. Share moments.
+                                        </motion.p>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* 4. CTA */}
+                                <div className="pt-12">
+                                    <AnimatePresence>
+                                        {step >= 3 && (
+                                            <motion.button
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={handleEnter}
+                                                className="px-10 py-4 bg-slate-900 text-white rounded-full font-bold shadow-xl shadow-slate-200 transition-all"
+                                            >
+                                                Tap to Enter
+                                            </motion.button>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                            </div>
+                        ) : (
+                            <motion.h1
+                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                transition={{ repeat: Infinity, duration: 2 }}
+                                className="text-2xl font-black text-slate-900 tracking-widest uppercase"
+                            >
+                                Shotly
+                            </motion.h1>
+                        )}
                     </motion.div>
                 </motion.div>
             )}

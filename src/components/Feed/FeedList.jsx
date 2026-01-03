@@ -1,14 +1,15 @@
-const FeedList = ({ activities = [] }) => {
+const FeedList = ({ activities = [], onItemClick }) => {
     if (activities.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-12 text-center px-4 animate-fade-in">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-blue-50 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-purple-400">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                    </svg>
+            <div className="flex flex-col items-center justify-center py-24 text-center px-8 animate-fade-in bg-white/40 backdrop-blur-xl rounded-[2.5rem] border border-white/50 shadow-sm mx-4">
+                <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6 scale-110 shadow-inner">
+                    <span className="text-4xl animate-bounce">✨</span>
                 </div>
-                <p className="text-gray-900 font-bold text-base">Quiet around here...</p>
-                <p className="text-gray-500 text-sm mt-1">Be the first to spark a conversation!</p>
+                <h3 className="text-slate-900 font-black text-xl mb-2">No moments yet</h3>
+                <p className="text-slate-400 font-medium text-sm leading-relaxed max-w-[200px]">
+                    Start reacting to photos to see the pulse of the community!
+                </p>
+                <div className="mt-8 w-12 h-1 bg-slate-100 rounded-full mx-auto" />
             </div>
         );
     }
@@ -24,14 +25,14 @@ const FeedList = ({ activities = [] }) => {
             </header>
             <div className="space-y-5">
                 {activities.map((item) => (
-                    <FeedItem key={item.id} activity={item} />
+                    <FeedItem key={item.id} activity={item} onClick={() => onItemClick && onItemClick(item)} />
                 ))}
             </div>
         </div>
     );
 };
 
-const FeedItem = ({ activity }) => {
+const FeedItem = ({ activity, onClick }) => {
     const timeAgo = activity.createdAt
         ? new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : 'Just now';
@@ -58,14 +59,17 @@ const FeedItem = ({ activity }) => {
         };
 
     return (
-        <div className={`relative flex items-start p-5 rounded-2xl rounded-l-lg border-l-[6px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group bg-gradient-to-r backdrop-blur-sm ${theme.wrapper} ${theme.border}`}>
+        <div
+            onClick={onClick}
+            className={`relative flex items-start p-5 rounded-2xl rounded-l-lg border-l-[6px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_12px_24px_-8px_rgba(0,0,0,0.1)] hover:-translate-y-1 transition-all duration-300 group bg-gradient-to-r backdrop-blur-sm cursor-pointer ${theme.wrapper} ${theme.border}`}
+        >
 
             {/* Avatar Section */}
             <div className="relative mr-4">
                 <div className={`p-0.5 bg-white rounded-full ring-2 ${theme.ring}`}>
                     <img
-                        src="https://images.unsplash.com/placeholder-avatars/extra-large.jpg?bg=fff&crop=faces&dpr=1&h=150&w=150&fit=crop"
-                        alt="User"
+                        src={activity.avatar || "https://images.unsplash.com/placeholder-avatars/extra-large.jpg?bg=fff&crop=faces&dpr=1&h=150&w=150&fit=crop"}
+                        alt={activity.user || "User"}
                         className="w-10 h-10 rounded-full object-cover"
                     />
                 </div>

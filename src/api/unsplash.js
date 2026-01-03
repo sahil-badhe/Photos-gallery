@@ -37,3 +37,25 @@ export const fetchPhotos = async ({ pageParam = 1 }) => {
         throw err;
     }
 };
+export const fetchPhotoById = async (id) => {
+    if (!UNSPLASH_ACCESS_KEY || typeof UNSPLASH_ACCESS_KEY !== 'string') {
+        throw new Error('MISSING_KEY');
+    }
+
+    try {
+        const response = await fetch(`${BASE_URL}/photos/${id}`, {
+            headers: {
+                Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Unsplash API Error: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (err) {
+        console.error('Fetch Photo By ID Failed:', err);
+        throw err;
+    }
+};

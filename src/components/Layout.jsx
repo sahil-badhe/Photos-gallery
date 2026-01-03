@@ -1,7 +1,11 @@
 import { useState } from 'react';
 
-const Layout = ({ gallery, feed }) => {
-  const [isFeedOpen, setIsFeedOpen] = useState(false);
+const Layout = ({ gallery, feed, isFeedOpen, setIsFeedOpen, onToggleFeed, onCloseFeed, currentUser, activeThemeColor }) => {
+
+  const themeStyle = {
+    backgroundColor: activeThemeColor || '#0f172a', // slate-900 default
+    transition: 'all 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+  };
 
   return (
     <div className="h-screen w-screen bg-[#f8fafc] flex overflow-hidden font-sans text-slate-900">
@@ -9,16 +13,24 @@ const Layout = ({ gallery, feed }) => {
       <div className="w-20 lg:w-64 bg-white/80 backdrop-blur-2xl border-r border-slate-200 flex flex-col flex-shrink-0 z-40 transition-all duration-500">
         <div className="p-6 border-b border-slate-100 flex items-center justify-center lg:justify-start">
           <h1 className="text-xl font-black tracking-tighter flex items-center gap-3 text-slate-900">
-            <span className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xl shadow-slate-900/20 flex-shrink-0">A</span>
-            <span className="hidden lg:block">Antigravity</span>
+            <span
+              style={themeStyle}
+              className="w-10 h-10 rounded-xl text-white flex items-center justify-center shadow-xl flex-shrink-0"
+            >
+              S
+            </span>
+            <span className="hidden lg:block">Shotly</span>
           </h1>
         </div>
 
         <nav className="flex-1 p-4 space-y-4">
           <button
-            onClick={() => setIsFeedOpen(false)}
+            onClick={() => {
+              onCloseFeed();
+            }}
+            style={!isFeedOpen ? themeStyle : {}}
             className={`w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-4 rounded-2xl text-sm font-bold transition-all duration-300 ${!isFeedOpen
-              ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/30 scale-105'
+              ? 'text-white shadow-2xl scale-105'
               : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
               }`}
           >
@@ -29,9 +41,10 @@ const Layout = ({ gallery, feed }) => {
           </button>
 
           <button
-            onClick={() => setIsFeedOpen(true)}
+            onClick={onToggleFeed}
+            style={isFeedOpen ? themeStyle : {}}
             className={`w-full flex items-center justify-center lg:justify-start gap-3 px-4 py-4 rounded-2xl text-sm font-bold transition-all duration-300 ${isFeedOpen
-              ? 'bg-slate-900 text-white shadow-2xl shadow-slate-900/30 scale-105'
+              ? 'text-white shadow-2xl scale-105'
               : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900'
               }`}
           >
@@ -43,9 +56,10 @@ const Layout = ({ gallery, feed }) => {
         </nav>
 
         <div className="p-4 border-t border-slate-100">
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200/50">
-            <p className="text-[10px] text-center text-slate-400 font-black uppercase tracking-widest hidden lg:block">InstantDB ⚡</p>
-            <div className="w-2 h-2 rounded-full bg-green-500 mx-auto lg:hidden shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+          <div className="p-3">
+            <p className="text-[10px] text-center lg:text-left text-slate-400 font-bold uppercase tracking-widest truncate">
+              <span className="hidden lg:inline">Signed in as</span> {currentUser?.name || 'Guest'}
+            </p>
           </div>
         </div>
       </div>
@@ -55,7 +69,7 @@ const Layout = ({ gallery, feed }) => {
         {/* Gallery Content - Expands/Shrinks */}
         <div
           className="flex-1 overflow-y-auto relative scrollbar-hide py-8 px-6 lg:px-12 transition-all duration-700 ease-[cubic-bezier(0.16, 1, 0.3, 1)]"
-          onClick={() => isFeedOpen && setIsFeedOpen(false)} // Close feed if clicking gallery
+          onClick={() => isFeedOpen && onCloseFeed()} // Close feed if clicking gallery
         >
           {gallery}
         </div>
@@ -71,7 +85,7 @@ const Layout = ({ gallery, feed }) => {
                 <div className="h-1.5 w-12 bg-slate-900 rounded-full"></div>
               </div>
               <button
-                onClick={() => setIsFeedOpen(false)}
+                onClick={onCloseFeed}
                 className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-900"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">

@@ -1,30 +1,59 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { tx, id } from '@instantdb/react';
+import { db } from '../../db/instant';
 
-const ImageModal = ({ image, onClose, onLike, onComment }) => {
+const ImageModal = ({ image, currentUser, onClose, onLike, onComment }) => {
     const [inputValue, setInputValue] = useState('');
-    const [comments, setComments] = useState([]);
+    const scrollRef = useRef(null);
 
-    // Reset state on new image
-    useEffect(() => {
-        if (image) {
-            setComments([
-                { user: 'Sarah', text: 'Amazing shot!' },
-                { user: 'Mike', text: 'Love the lighting.' },
-            ]);
+    // Sync comments from InstantDB
+    const { isLoading, error, data } = db.useQuery({
+        comments: {
+            $: {
+                where: { photoId: image?.id }
+            }
         }
-    }, [image]);
+    });
+
+    const comments = data?.comments || [];
+    // Sort comments: neuesten zuerst (latest first)
+    const sortedComments = [...comments].sort((a, b) => b.createdAt - a.createdAt);
+
+    // Auto-scroll to top when new comment arrives
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, [sortedComments.length]);
 
     if (!image) return null;
 
+    const themeColor = image.color || '#000000';
+    const softThemeColor = `${themeColor}15`;
+    const borderThemeColor = `${themeColor}30`;
+
     const handleCommentSubmit = (e) => {
         e.preventDefault();
-        if (!inputValue.trim()) return;
+        const text = inputValue.trim();
+        if (!text || !image || !currentUser) return;
 
-        // Add to local list
-        setComments([...comments, { user: 'You', text: inputValue }]);
+        // Persist to InstantDB
+        db.transact(
+            tx.comments[id()].update({
+                photoId: image.id,
+                user: {
+                    id: currentUser.id,
+                    name: currentUser.name,
+                    avatar: currentUser.avatar
+                },
+                text: text,
+                createdAt: Date.now()
+            })
+        );
 
-        // Add to global Activity Sidebar
-        if (onComment) onComment(image, inputValue);
+        // Also add to global Activity Sidebar (if needed for backward compatibility)
+        if (onComment) onComment(image, text);
 
         setInputValue('');
     };
@@ -40,73 +69,126 @@ const ImageModal = ({ image, onClose, onLike, onComment }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
-            <div className="absolute inset-0 bg-black/90 backdrop-blur-sm transition-opacity" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/95 backdrop-blur-md transition-opacity" onClick={onClose} />
 
-            <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col md:flex-row shadow-black/50">
+            <div className="relative bg-white rounded-[2.5rem] overflow-hidden shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col md:flex-row shadow-black/50 border border-white/10">
                 {/* Close Button */}
-                <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                <button onClick={onClose} className="absolute top-6 right-6 z-20 p-3 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all backdrop-blur-md">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
 
                 {/* Image Section */}
-                <div className="w-full md:w-2/3 bg-black flex items-center justify-center relative overflow-hidden">
+                <div className="w-full md:w-2/3 bg-black flex items-center justify-center relative overflow-hidden group">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 0.3 }}
+                        style={{ backgroundColor: themeColor }}
+                        className="absolute inset-0 blur-3xl scale-110"
+                    />
                     <img
                         src={image.urls.regular}
                         alt={image.alt_description}
-                        className="max-w-full max-h-[50vh] md:max-h-[90vh] object-contain"
+                        className="relative z-10 max-w-full max-h-[50vh] md:max-h-[85vh] object-contain transition-transform duration-700 group-hover:scale-[1.02]"
                     />
                 </div>
 
                 {/* Interaction Section */}
-                <div className="w-full md:w-1/3 flex flex-col bg-white h-full max-h-[40vh] md:max-h-[90vh] border-l border-gray-100">
+                <div className="w-full md:w-1/3 flex flex-col bg-white h-full max-h-[40vh] md:max-h-[90vh]">
                     {/* Header */}
-                    <div className="p-5 border-b border-gray-100 flex items-center space-x-3 bg-white z-10">
+                    <div className="p-6 border-b border-gray-50 flex items-center space-x-4">
                         <a href={image.user.links.html} target="_blank" rel="noreferrer" className="flex-shrink-0">
-                            <img src={image.user.profile_image.medium} alt={image.user.name} className="w-10 h-10 rounded-full border border-gray-100" />
+                            <img src={image.user.profile_image.medium} alt={image.user.name} className="w-12 h-12 rounded-2xl border-2 border-slate-50 shadow-sm object-cover" />
                         </a>
                         <div className="min-w-0">
-                            <h3 className="font-bold text-gray-900 truncate">{image.user.name}</h3>
-                            <a href={image.user.links.html} target="_blank" rel="noreferrer" className="text-xs text-gray-500 hover:underline">@{image.user.username}</a>
+                            <h3 className="font-bold text-slate-900 truncate">{image.user.name}</h3>
+                            <p className="text-xs text-slate-400 font-medium">@{image.user.username}</p>
                         </div>
                     </div>
 
                     {/* Comments List */}
-                    <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                    <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
                         {image.description && (
-                            <div className="pb-4 border-b border-gray-50 mb-4">
-                                <p className="text-gray-800 text-sm leading-relaxed">{image.description}</p>
+                            <div className="pb-6 border-b border-slate-50 mb-2">
+                                <p className="text-slate-600 text-[13px] leading-relaxed font-medium italic">"{image.description}"</p>
                             </div>
                         )}
 
-                        {comments.map((c, i) => (
-                            <div key={i} className="flex space-x-2 animate-fade-in">
-                                <div className="flex-shrink-0 w-8 flex justify-center pt-0.5">
-                                    <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">{c.user[0]}</div>
-                                </div>
-                                <div>
-                                    <span className="font-semibold text-sm text-gray-900 mr-2">{c.user}</span>
-                                    <span className="text-sm text-gray-700 leading-relaxed">{c.text}</span>
-                                </div>
+                        {isLoading && (
+                            <div className="flex justify-center py-12">
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                                    style={{ borderTopColor: themeColor }}
+                                    className="w-6 h-6 border-2 border-slate-100 rounded-full"
+                                />
                             </div>
-                        ))}
+                        )}
+
+                        <AnimatePresence initial={false}>
+                            {sortedComments.map((c) => (
+                                <motion.div
+                                    key={c.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="flex space-x-3"
+                                >
+                                    <img
+                                        src={c.user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.user.name}`}
+                                        alt={c.user.name}
+                                        className="w-8 h-8 rounded-xl border border-slate-100 shadow-sm flex-shrink-0"
+                                    />
+                                    <div
+                                        style={{ backgroundColor: softThemeColor, borderColor: borderThemeColor }}
+                                        className="flex-1 p-3.5 rounded-2xl rounded-tl-none border shadow-sm"
+                                    >
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="font-bold text-xs text-slate-900">{c.user.name}</span>
+                                            <span className="text-[10px] text-slate-400 font-black uppercase tracking-tighter">
+                                                {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <p className="text-[13px] text-slate-700 leading-relaxed">{c.text}</p>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+
+                        {!isLoading && sortedComments.length === 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-center py-12 px-4"
+                            >
+                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 scale-110">
+                                    <span className="text-2xl">💬</span>
+                                </div>
+                                <p className="text-slate-900 font-black text-sm mb-1">Be the first to share a thought</p>
+                                <p className="text-slate-400 text-xs font-medium">Your perspective matters ✨</p>
+                            </motion.div>
+                        )}
                     </div>
 
-                    {/* Footer: Input only */}
-                    <div className="p-5 border-t border-gray-100 bg-gray-50/50">
-                        <form onSubmit={handleCommentSubmit} className="relative">
+                    {/* Footer: Input */}
+                    <div className="p-6 border-t border-slate-50">
+                        <form onSubmit={handleCommentSubmit} className="relative group">
                             <input
                                 type="text"
                                 value={inputValue}
                                 onChange={(e) => setInputValue(e.target.value)}
-                                placeholder="Add a comment..."
-                                className="w-full pl-4 pr-12 py-3 bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-gray-400 transition-all text-sm shadow-sm"
+                                placeholder="Write something meaningful..."
+                                className="w-full pl-6 pr-16 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:outline-none focus:bg-white transition-all text-sm font-bold text-slate-900 placeholder:text-slate-300"
+                                style={{
+                                    borderColor: inputValue.trim() ? borderThemeColor : 'transparent',
+                                    '--tw-ring-color': themeColor
+                                }}
                             />
                             <button
                                 type="submit"
                                 disabled={!inputValue.trim()}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-blue-600 font-semibold text-sm disabled:opacity-50 hover:bg-blue-50 rounded-full transition-colors"
+                                style={{ color: themeColor }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 hover:bg-slate-50 rounded-xl transition-all disabled:opacity-0 disabled:translate-x-4"
                             >
-                                Post
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                             </button>
                         </form>
                     </div>

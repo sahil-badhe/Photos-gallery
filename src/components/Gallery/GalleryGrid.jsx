@@ -77,8 +77,8 @@ const GalleryGrid = ({ onImageSelect, onLike, onComment }) => {
                     </div>
 
                     <h1 className="text-7xl lg:text-8xl xl:text-9xl font-[1000] tracking-[-0.04em] leading-[0.9] transition-all duration-700 flex items-baseline gap-2 cursor-default select-none group-hover/header:tracking-[-0.03em] overflow-visible">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-600 drop-shadow-[0_10px_20px_rgba(79,70,229,0.1)] py-4 -my-4 px-2 -mx-2">
-                            Gallery
+                        <span className="text-slate-900 drop-shadow-sm py-4 -my-4 px-2 -mx-2">
+                            Visuals
                         </span>
 
                         <motion.span
@@ -87,13 +87,7 @@ const GalleryGrid = ({ onImageSelect, onLike, onComment }) => {
                             transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
                             className="relative block"
                         >
-                            <span className="text-indigo-600 block transition-transform group-hover/header:scale-110 duration-500">•</span>
-                            {/* Breathing Glow */}
-                            <motion.div
-                                animate={{ opacity: [0.2, 0.5, 0.2], scale: [1, 1.4, 1] }}
-                                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                                className="absolute inset-0 bg-indigo-400 blur-xl rounded-full"
-                            />
+                            <span className="text-slate-900 block transition-transform group-hover/header:scale-110 duration-500">•</span>
                         </motion.span>
                     </h1>
                 </motion.div>
