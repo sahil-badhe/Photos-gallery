@@ -1,16 +1,71 @@
-# React + Vite
+# 📸 Shotly - Real-Time Photo Gallery & Activity Feed
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Shotly is a premium, high-performance photo gallery application built with React, Vite, and InstantDB. It features a stunning masonry grid layout, real-time activity updates, and a seamless user experience designed to showcase visual content beautifully.
 
-Currently, two official plugins are available:
+![Shotly Gallery View](./public/screenshots/gallery_view.png)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## React Compiler
+- **Dynamic Masonry Layout**: A fluid and responsive grid that adapts to any screen size, providing a premium feel for image browsing.
+- **Real-Time Activity Feed**: Stay updated with live comments, reactions, and interactions as they happen.
+- **Interactive Image Modals**: View images in high resolution with integrated social features.
+- **Micro-Animations**: Powered by **Framer Motion** for smooth transitions and a modern UI feel.
+- **Authentication Gate**: Smart user identity management for interactive features.
+- **InstantDB Integration**: Leveraging real-time graph database capabilities for lightning-fast synchronization.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+![Shotly Activity Feed](./public/screenshots/activity_feed.png)
 
-## Expanding the ESLint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Frontend**: React 19 (Vite)
+- **Styling**: Tailwind CSS 4.0
+- **Animations**: Framer Motion
+- **Database/Real-time**: [InstantDB](https://www.instantdb.com/)
+- **State Management**: TanStack React Query
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/sahil-badhe/Photos-gallery.git
+   cd Photos-gallery
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Set up Environment Variables**:
+   Create a `.env` file in the root directory and add your InstantDB App ID:
+   ```env
+   VITE_INSTANT_APP_ID=your_app_id_here
+   ```
+
+4. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
+
+## 📱 UI Previews
+
+````carousel
+![Gallery Grid](./public/screenshots/gallery_view.png)
+<!-- slide -->
+![Activity Sidebar](./public/screenshots/activity_feed.png)
+````
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+Built with ❤️ by [Sahil Badhe](https://github.com/sahil-badhe)
